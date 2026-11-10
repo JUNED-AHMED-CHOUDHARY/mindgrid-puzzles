@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindGrid Daily Brain Workout | Free Interactive Large Print Puzzle</title>
+  <meta name="description" content="Play a daily free large print math and logic puzzle. Sharpen your mind with Calcudoku, Sudoku, and Kakuro.">
+  <meta property="og:title" content="MindGrid Daily Brain Workout | Free Interactive Large Print Puzzle">
+  <meta property="og:description" content="Play a daily free large print math and logic puzzle. Sharpen your mind in under 5 minutes.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#38bdf8">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --success: #22c55e;
+      --error: #ef4444;
+      --cage-border: #38bdf8;
+      --inner-border: rgba(148, 163, 184, 0.2);
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem;
+    }
+    header {
+      text-align: center;
+      max-width: 500px;
+      margin-bottom: 1rem;
+    }
+    .brand {
+      display: inline-block;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.3rem;
+    }
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+    .day-selector {
+      display: flex;
+      gap: 0.35rem;
+      margin: 0.8rem 0;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .day-pill {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.3rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .day-pill:hover {
+      border-color: var(--accent);
+      color: var(--text-main);
+    }
+    .day-pill.active {
+      background: var(--accent);
+      color: #0f172a;
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+    .game-container {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .meta-bar {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    .timer {
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      background: var(--card-bg);
+      border: 3px solid var(--accent);
+      border-radius: 0.5rem;
+      overflow: hidden;
+      width: 320px;
+      height: 320px;
+      margin-bottom: 1.25rem;
+      user-select: none;
+    }
+    .cell {
+      background: var(--card-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      font-weight: 700;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .cell:hover {
+      background: #253349;
+    }
+    .cell.selected {
+      background: #1e3a5f;
+      outline: 2px solid var(--accent);
+      z-index: 2;
+    }
+    .cell.error {
+      color: var(--error);
+      background: rgba(239, 68, 68, 0.15);
+    }
+    .cell.correct {
+      color: var(--success);
+    }
+    .cage-clue {
+      position: absolute;
+      top: 2px;
+      left: 4px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      pointer-events: none;
+      line-height: 1;
+    }
+    .controls {
+      display: flex;
+      gap: 0.5rem;
+      width: 100%;
+      max-width: 320px;
+      margin-bottom: 1rem;
+    }
+    .num-btn {
+      flex: 1;
+      background: #27354a;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      font-size: 1.25rem;
+      font-weight: 700;
+      border-radius: 0.5rem;
+      padding: 0.75rem 0;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.05s;
+    }
+    .num-btn:hover {
+      background: #33445c;
+    }
+    .num-btn:active {
+      transform: scale(0.96);
+    }
+    .action-bar {
+      display: flex;
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 320px;
+    }
+    .btn {
+      flex: 1;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s;
+    }
+    .btn-clear {
+      background: #334155;
+      color: var(--text-main);
+    }
+    .btn-clear:hover {
+      background: #475569;
+    }
+    .btn-check {
+      background: var(--accent);
+      color: #0f172a;
+      font-weight: 700;
+    }
+    .btn-check:hover {
+      background: var(--accent-hover);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-backdrop.active {
+      display: flex;
+    }
+    .modal {
+      background: var(--card-bg);
+      border: 2px solid var(--accent);
+      border-radius: 1rem;
+      max-width: 440px;
+      width: 100%;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes popIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal h2 {
+      font-size: 1.6rem;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+    }
+    .modal p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .cta-btn {
+      display: block;
+      width: 100%;
+      padding: 0.9rem;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-weight: 700;
+      text-decoration: none;
+      margin-bottom: 0.75rem;
+      transition: transform 0.1s, opacity 0.15s;
+    }
+    .cta-primary {
+      background: var(--accent);
+      color: #0f172a;
+    }
+    .cta-primary:hover {
+      background: var(--accent-hover);
+    }
+    .cta-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+    }
+    .cta-secondary:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    footer {
+      margin-top: 1.75rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="brand">MindGrid Press &bull; Daily Workout</span>
+    <h1>Calcudoku Math Cage</h1>
+    <p class="subtitle">Fill the 4&times;4 grid with digits 1&ndash;4 so no digit repeats in any row or column, and each outlined cage equals its target clue.</p>
+    <div class="day-selector" id="daySelector">
+      <!-- Generated day pills -->
+    </div>
+  </header>
+
+  <main class="game-container">
+    <div class="meta-bar">
+      <span id="puzzleTitle">Puzzle: Today</span>
+      <span class="timer" id="timer">Time: 00:00</span>
+    </div>
+
+    <!-- 4x4 Grid dynamically rendered -->
+    <div class="grid" id="grid"></div>
+
+    <div class="controls">
+      <button class="num-btn" onclick="inputNumber(1)">1</button>
+      <button class="num-btn" onclick="inputNumber(2)">2</button>
+      <button class="num-btn" onclick="inputNumber(3)">3</button>
+      <button class="num-btn" onclick="inputNumber(4)">4</button>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn btn-clear" onclick="clearSelected()">Clear</button>
+      <button class="btn btn-check" onclick="checkSolution()">Check Solution</button>
+    </div>
+  </main>
+
+  <footer>
+    MindGrid Press &copy; 2026 &bull; Large Print Logic &amp; Math Puzzles &bull; <a href="https://mind-gridmindgrid-press.kit.com/b8ebe403f6" target="_blank">Free Sampler PDF</a>
+  </footer>
+
+  <!-- Win Modal -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal">
+      <h2>🎉 Outstanding!</h2>
+      <p id="winMessage">You completed today's Calcudoku puzzle flawlessly in <strong>01:14</strong>.<br><br>Ready for more? Download our <strong>Free 16-Page Large Print Sampler</strong> with 8 full-size printable puzzles and answers, or explore our complete 4-book collection on Amazon.</p>
+      
+      <a class="cta-btn cta-primary" href="https://mind-gridmindgrid-press.kit.com/b8ebe403f6" target="_blank">
+        📥 Get Free 16-Page Sampler PDF
+      </a>
+      <a class="cta-btn cta-secondary" href="https://www.amazon.com/dp/B0HPSKQY4V" target="_blank">
+        📚 View MindGrid Books on Amazon
+      </a>
+      <button class="btn btn-clear" style="margin-top: 0.5rem; width: 100%;" onclick="closeModal()">Close &amp; Keep Playing</button>
+    </div>
+  </div>
+
+  <script src="puzzles.js"></script>
+  <script>
+    let currentDayIndex = new Date().getDay();
+    let currentPuzzle = null;
+    let selectedRow = 0;
+    let selectedCol = 0;
+    let timerSeconds = 0;
+    let timerInterval = null;
+
+    function init() {
+      renderDaySelector();
+      loadPuzzle(currentDayIndex);
+
+      // Key listeners
+      window.addEventListener('keydown', (e) => {
+        if (e.key >= '1' && e.key <= '4') {
+          inputNumber(parseInt(e.key));
+        } else if (e.key === 'Backspace' || e.key === 'Delete') {
+          clearSelected();
+        } else if (e.key === 'ArrowUp' && selectedRow > 0) {
+          selectCell(selectedRow - 1, selectedCol);
+        } else if (e.key === 'ArrowDown' && selectedRow < 3) {
+          selectCell(selectedRow + 1, selectedCol);
+        } else if (e.key === 'ArrowLeft' && selectedCol > 0) {
+          selectCell(selectedRow, selectedCol - 1);
+        } else if (e.key === 'ArrowRight' && selectedCol < 3) {
+          selectCell(selectedRow, selectedCol + 1);
+        }
+      });
+    }
+
+    function renderDaySelector() {
+      const container = document.getElementById('daySelector');
+      container.innerHTML = '';
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      days.forEach((day, idx) => {
+        const pill = document.createElement('button');
+        pill.className = `day-pill ${idx === currentDayIndex ? 'active' : ''}`;
+        pill.textContent = day;
+        pill.onclick = () => {
+          document.querySelectorAll('.day-pill').forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          loadPuzzle(idx);
+        };
+        container.appendChild(pill);
+      });
+    }
+
+    function loadPuzzle(dayIdx) {
+      currentDayIndex = dayIdx;
+      currentPuzzle = WEEKLY_PUZZLES[dayIdx];
+      document.getElementById('puzzleTitle').textContent = `${currentPuzzle.title}`;
+
+      // Reset timer
+      clearInterval(timerInterval);
+      timerSeconds = 0;
+      document.getElementById('timer').textContent = 'Time: 00:00';
+      timerInterval = setInterval(() => {
+        timerSeconds++;
+        const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+        const secs = String(timerSeconds % 60).padStart(2, '0');
+        document.getElementById('timer').textContent = `Time: ${mins}:${secs}`;
+      }, 1000);
+
+      renderGrid();
+    }
+
+    function renderGrid() {
+      const gridEl = document.getElementById('grid');
+      gridEl.innerHTML = '';
+
+      // Build cage lookup map: (r, c) -> cageId
+      const cellCageMap = {};
+      const clueMap = {};
+
+      currentPuzzle.cages.forEach((cage, cageId) => {
+        cage.cells.forEach(([r, c], idx) => {
+          cellCageMap[`${r},${c}`] = cageId;
+          if (idx === 0) {
+            clueMap[`${r},${c}`] = `${cage.target}${cage.op === 'x' ? '&times;' : cage.op}`;
+          }
+        });
+      });
+
+      // Render 16 cells
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.setAttribute('data-row', r);
+          cell.setAttribute('data-col', c);
+
+          const myCage = cellCageMap[`${r},${c}`];
+
+          // Compute cage borders
+          const topCage = r > 0 ? cellCageMap[`${r-1},${c}`] : null;
+          const bottomCage = r < 3 ? cellCageMap[`${r+1},${c}`] : null;
+          const leftCage = c > 0 ? cellCageMap[`${r},${c-1}`] : null;
+          const rightCage = c < 3 ? cellCageMap[`${r},${c+1}`] : null;
+
+          cell.style.borderTop = topCage === myCage ? '1px dashed var(--inner-border)' : '2px solid var(--cage-border)';
+          cell.style.borderBottom = bottomCage === myCage ? '1px dashed var(--inner-border)' : '2px solid var(--cage-border)';
+          cell.style.borderLeft = leftCage === myCage ? '1px dashed var(--inner-border)' : '2px solid var(--cage-border)';
+          cell.style.borderRight = rightCage === myCage ? '1px dashed var(--inner-border)' : '2px solid var(--cage-border)';
+
+          // Clue
+          if (clueMap[`${r},${c}`]) {
+            const clueSpan = document.createElement('span');
+            clueSpan.className = 'cage-clue';
+            clueSpan.innerHTML = clueMap[`${r},${c}`];
+            cell.appendChild(clueSpan);
+          }
+
+          cell.onclick = () => selectCell(r, c);
+          gridEl.appendChild(cell);
+        }
+      }
+
+      selectCell(0, 0);
+    }
+
+    function selectCell(r, c) {
+      document.querySelectorAll('.cell').forEach(el => el.classList.remove('selected'));
+      const target = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+      if (target) {
+        target.classList.add('selected');
+        selectedRow = r;
+        selectedCol = c;
+      }
+    }
+
+    function inputNumber(num) {
+      const cell = document.querySelector(`.cell[data-row="${selectedRow}"][data-col="${selectedCol}"]`);
+      if (!cell) return;
+      
+      const clue = cell.querySelector('.cage-clue');
+      cell.textContent = num;
+      if (clue) cell.prepend(clue);
+      cell.classList.remove('error');
+
+      // Auto move
+      if (selectedCol < 3) {
+        selectCell(selectedRow, selectedCol + 1);
+      } else if (selectedRow < 3) {
+        selectCell(selectedRow + 1, 0);
+      }
+    }
+
+    function clearSelected() {
+      const cell = document.querySelector(`.cell[data-row="${selectedRow}"][data-col="${selectedCol}"]`);
+      if (!cell) return;
+      const clue = cell.querySelector('.cage-clue');
+      cell.textContent = '';
+      if (clue) cell.prepend(clue);
+      cell.classList.remove('error');
+    }
+
+    function checkSolution() {
+      let isComplete = true;
+      let isCorrect = true;
+
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 4; c++) {
+          const cell = document.querySelector(`.cell[data-row="${r}"][data-col="${c}"]`);
+          const text = cell.childNodes[cell.childNodes.length - 1].nodeValue ? cell.childNodes[cell.childNodes.length - 1].nodeValue.trim() : '';
+          const val = parseInt(text);
+
+          if (!val) {
+            isComplete = false;
+            cell.classList.add('error');
+          } else if (val !== currentPuzzle.grid[r][c]) {
+            isCorrect = false;
+            cell.classList.add('error');
+          } else {
+            cell.classList.remove('error');
+            cell.classList.add('correct');
+          }
+        }
+      }
+
+      if (isComplete && isCorrect) {
+        clearInterval(timerInterval);
+        const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+        const secs = String(timerSeconds % 60).padStart(2, '0');
+        document.getElementById('winMessage').innerHTML = `You completed today's Calcudoku puzzle flawlessly in <strong>${mins}:${secs}</strong>.<br><br>Ready for more? Download our <strong>Free 16-Page Large Print Sampler</strong> with 8 full-size printable puzzles and answers, or explore our complete 4-book collection on Amazon.`;
+        document.getElementById('modalBackdrop').classList.add('active');
+      } else if (!isComplete) {
+        alert('Some cells are still empty! Complete the whole grid and try again.');
+      } else {
+        alert('Check the highlighted red cells: some numbers do not match the cage math or row/column uniqueness.');
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('modalBackdrop').classList.remove('active');
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
